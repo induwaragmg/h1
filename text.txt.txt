@@ -1,329 +1,164 @@
-        private void button1_Click(object sender, EventArgs e)
-        {
-            string conn_string = "server=localhost;user=root;password=;database=logindb;";
 
-            string username = textBox1.Text.Trim();
-            string password = textBox2.Text.Trim();
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
 
-            using (MySqlConnection conn = new MySqlConnection(conn_string))
-            {
+spring.datasource.url=jdbc:h2:file:./data/flight_tracking_db
+spring.datasource.username=sa
+spring.datasource.password=
 
-                try
-                {
-                    conn.Open();
-                    string query = "SELECT COUNT(*) FROM `user` WHERE username = @username AND password = @password";
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-
-                    cmd.Parameters.AddWithValue("@username", username);
-                    cmd.Parameters.AddWithValue("@password", password);
-                 
-
-                    int count = Convert.ToInt32(cmd.ExecuteScalar());
-
-                    if (count > 0)
-                    {
-                        MessageBox.Show("login successful", "success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    }
-                    else
-                    {
-                        MessageBox.Show("Invalid usesrname of password", "login failed", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("Error connecting to database", ex.Message);
-                }
-            }
-
-        }
-
-----------------------------------------
-
-	
-        private void linkLabel1_LinkClicked(object sender, LinkLabelLinkClickedEventArgs e)
-        {
-            RegisterWindow registerform = new RegisterWindow();
-            this.Hide();
-            registerform.ShowDialog();
-            
-
-        private void button1_Click(object sender, EventArgs e)
-        {
-            string conn_string = "server=localhost;user=root;password=;database=logindb;";
-
-            string name = textBox1.Text.Trim();
-            string username = textBox2.Text.Trim();
-            string password = textBox3.Text.Trim();
-            string mood = comboBox1.SelectedItem?.ToString();
-
-            if( string.IsNullOrWhiteSpace(mood) ||
-                string.IsNullOrWhiteSpace(username) ||
-                string.IsNullOrWhiteSpace (password) ||
-                string.IsNullOrWhiteSpace(name))
-            {
-                MessageBox.Show("please fill all the fields");
-
-            }
-
-            using (MySqlConnection conn = new MySqlConnection(conn_string))
-            {
-                try
-                {
-                    conn.Open();
-
-                    string query = "INSERT INTO `user`(`name`, `username`, `password`, `mood`) VALUES (@name, @username,@password, @mood);";
-
-                    MySqlCommand cmd = new MySqlCommand(query, conn);
-
-                    cmd.Parameters.AddWithValue("@name", name);
-                    cmd.Parameters.AddWithValue("@username", username);
-                    cmd.Parameters.AddWithValue("@password", password);
-                    cmd.Parameters.AddWithValue("@mood", mood);
-
-                    int rowaffected = cmd.ExecuteNonQuery();
-
-                    if (rowaffected > 0)
-                    {
-                        MessageBox.Show("registration successful!");
-                    }
-                    else
-                    {
-                        MessageBox.Show("registration failed try again !");
-                    }
-                } 
-                catch (Exception ex)
-                {
-                    MessageBox.Show("error register user! " + ex.Message);
-                }
-            }
-        }
+spring.jpa.hibernate.ddl-auto=update
 
 
---------------------------------------------------
-    {
-        static void Question_01()
-        {
 
-            Task firsttask = new Task(() => Console.WriteLine("hello task!"));
+package com.simpleflighttracker.simpleFlightTracker.controller;
 
-            firsttask.Start();
-            firsttask.Wait();
+import com.simpleflighttracker.simpleFlightTracker.model.Airport;
+import com.simpleflighttracker.simpleFlightTracker.model.Flight;
+import com.simpleflighttracker.simpleFlightTracker.service.FlightService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
 
-            Console.WriteLine("main method completed!");
-        }
+import java.util.List;
 
-        static void Question_02()
-        {
-            Task<int> task1 = new Task<int>(() => 5 + 10);
+@RestController
+@RequestMapping("/api/flights")
+public class FlightController {
 
-            task1.Start();
-            task1.Wait();
+    @Autowired
+    private FlightService service;
 
-            Console.WriteLine(task1.Result);
+    @PostMapping
+    public Flight createFlight(@RequestBody Flight f) {
+        return service.createFlight(f);
+    }
 
-        }
+    @GetMapping("/{id}")
+    public Flight GetFlightById(@PathVariable Long id){
+        return service.getFlightById(id);
+    }
 
-        static void Question_03()
-        {
-            Task task1 = new Task(() =>
-            {
-                Console.WriteLine("new task is starting..");
-                throw new InvalidOperationException("an error occured in the task");
-            }
-            );
+    @GetMapping
+    public List<Flight> getAllFlights(){
+        return service.getAllFlights();
+    }
 
-            try
-            {
-                task1.Start();
-                task1.Wait();
+    @GetMapping("/search")
+    public List<Flight> searchFlight(@RequestParam Airport origin, @RequestParam Airport destination ){
+        return service.searchFlight(origin, destination);
+    }
 
-            }
+    @PutMapping("/{id}")
+    public Flight updateFlight(@PathVariable Long id, @RequestBody Flight f){
+        return service.updateFlight(id, f);
+    }
 
-            catch (AggregateException ae)
-            {
-                foreach (Exception ex in ae.InnerExceptions)
-                {
-                    Console.WriteLine("Caught exception: " + ex.Message);
-                }
-            }
-
-            Console.WriteLine("main method completed");
-
-        }
-
-        static void Question_04()
-        {
-            Task task1 = new Task(() =>
-            {
-                Console.WriteLine("task is running...");
-                Thread.Sleep(2000);
-            });
-
-            Console.WriteLine("status before task start:  " + task1.Status);
-            task1.Start();
-            Console.WriteLine("status after task start:  " + task1.Status);
-            task1.Wait();
-            Console.WriteLine("status after task completion:  " + task1.Status);
-
-        }
-
-        static void Question_05()
-        {
-            Task task1 = new Task(() =>
-            {
-                Console.WriteLine("first tast start...");
-                Thread.Sleep(1000);
-            }
-            );
-            Task task2 = task1.ContinueWith((t) =>
-            {
-                Console.WriteLine("second task contineu with first");
-                Thread.Sleep(1000);
-            });
-
-            task1.Start();
-            task2.Wait();
-            Console.WriteLine("all taks are completed!");
-        }
-
-
-         
-        static void Main(string[] args)
-        {
-            Question_05();
-        }
-
-
-        
+    @DeleteMapping("/{id}")
+    public void deleteFlight(@PathVariable Long id){
+        service.deleteFlight(id);
     }
 }
 
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using MySql.Data.MySqlClient;
 
-namespace test2App
-{
-    public partial class Home : Form
-    {
-        public Home()
-        {
-            InitializeComponent();
-            LoadStudents();
-        }
-        public static String connectionString = "server=localhost;user=root;password=DJdas12345;database=testdb";
-        public static MySqlConnection conn = new MySqlConnection(connectionString);
+package com.simpleflighttracker.simpleFlightTracker.service;
 
-        public void ClearFields()
-        {
-            txtName.Clear();
-            txtAge.Clear();
-            conn.Close();
-        }
-        public void LoadStudents()
-        {
-            studentsList.Items.Clear();
-            try
-            {
-                conn.Open();
-                MySqlCommand cmd = new MySqlCommand("Select * FROM student",conn);
-                Console.WriteLine("Connection Running");
-                var dr = cmd.ExecuteReader();
+import com.simpleflighttracker.simpleFlightTracker.model.Airport;
+import com.simpleflighttracker.simpleFlightTracker.model.Flight;
+import com.simpleflighttracker.simpleFlightTracker.repository.FlightRepository;
+import jakarta.transaction.Transactional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
-                Console.WriteLine(dr);
-                while (dr.Read())
-                {
-                    studentsList.Items.Add($"{dr["Id"]} - {dr["Name"]}");
-                }
-            }
-            catch (Exception)
-            {
+import java.util.List;
 
-                throw;
-            }finally
-            {
-                conn.Close();
-            }
+@Service
+public class FlightService {
+    @Autowired
+    private FlightRepository repo;
 
-        }
+    public Flight createFlight(Flight flight){
+        return repo.save(flight);
+    }
 
-        private void btnAdd_Click(object sender, EventArgs e)
-        {
-            try
-            {
-                conn.Open();
-                var cmd = new MySqlCommand("INSERT INTO Student (name, age) VALUES (@name, @age)", conn);
-                cmd.Parameters.AddWithValue("@name", txtName.Text.Trim());
-                cmd.Parameters.AddWithValue("@age", txtAge.Text.Trim());
-                cmd.ExecuteNonQuery();
-                MessageBox.Show("Updated Successfully", "Success", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                ClearFields();
-                LoadStudents();
-            }
-            catch (Exception)
-            {
+    public List<Flight> getAllFlights(){
+        return repo.findAll();
+    }
 
-                throw;
-            }finally { conn.Close(); }
-        }
+    public Flight getFlightById(Long id){
+        return repo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Flight not found" + id ));
+    }
+
+
+    public List<Flight> searchFlight(Airport origin, Airport destination){
+        return repo.findByOriginAirportAndDestinationAirport(origin, destination);
+    }
+
+    @Transactional
+    public Flight updateFlight(Long id, Flight flight){
+        Flight existing = getFlightById(id);
+
+        existing.setFlightNumber(flight.getFlightNumber());
+        existing.setArrivalTime(flight.getArrivalTime());
+        existing.setDepartureTime(flight.getDepartureTime());
+        existing.setDestinationAirport(flight.getDestinationAirport());
+
+        return repo.save(existing);
+    }
+
+    public void deleteFlight(Long id){
+        repo.deleteById(id);
     }
 }
 
- 
-// Custom exception class 
-class DivisionByZeroException : Exception 
-{ 
-    public DivisionByZeroException(string message) : base(message) 
-    { 
-    } 
-} 
- 
-class Program 
-{ 
-    // Method to perform division 
-    static double Divide(double numerator, double denominator) 
-    { 
-        if (denominator == 0) 
-        { 
-            throw new DivisionByZeroException("Error: Division by zero is not allowed."); 
-        } 
-        return numerator / denominator; 
-    } 
- 
-    static void Main() 
-    { 
-        try 
-        { 
-            Console.Write("Enter numerator: "); 
-            double numerator = Convert.ToDouble(Console.ReadLine()); 
- 
-            Console.Write("Enter denominator: "); 
-            double denominator = Convert.ToDouble(Console.ReadLine()); 
- 
-            double result = Divide(numerator, denominator); 
-            Console.WriteLine("Result: " + result); 
-        } 
-        catch (DivisionByZeroException ex) 
-        { 
-            Console.WriteLine(ex.Message); 
-        } 
-        catch (FormatException) 
-        { 
-            Console.WriteLine("Invalid input. Please enter numeric values."); 
-        } 
-        catch (Exception ex) 
-        { 
-            Console.WriteLine("An error occurred: " + ex.Message); 
-        } 
- 
-        Console.ReadLine(); 
-    } 
-} 
+
+package com.simpleflighttracker.simpleFlightTracker.model;
+
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.time.LocalDateTime;
+
+@Data
+@Entity
+@NoArgsConstructor
+@AllArgsConstructor
+public class Flight {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false, unique = true)
+    private  String flightNumber;
+
+    private LocalDateTime departureTime;
+    private LocalDateTime arrivalTime;
+
+    @ManyToOne
+    @JoinColumn(name = "origin_airport_id", nullable = false)
+    @JsonBackReference
+    private Airport originAirport;
+
+    @ManyToOne
+    @JoinColumn(name = "destination_airport_id", nullable = false)
+    @JsonBackReference
+    private Airport destinationAirport;
+}
+
+package com.simpleflighttracker.simpleFlightTracker.repository;
+
+import com.simpleflighttracker.simpleFlightTracker.model.Airport;
+import com.simpleflighttracker.simpleFlightTracker.model.Flight;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+
+@Repository
+public interface FlightRepository extends JpaRepository<Flight, Long> {
+    List<Flight> findByOriginAirportAndDestinationAirport(Airport origin, Airport destination);
+}
+
 
